@@ -1,5 +1,5 @@
 import {Dirent} from "fs";
-import fs from "fs";
+import * as fs from "fs";
 
 export function findReleaseFiles(releaseDir: string): Dirent[] | undefined {
     const releaseFiles = fs.readdirSync(releaseDir, {withFileTypes: true})

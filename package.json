@@ -3,11 +3,18 @@
   "version": "1.0.4",
   "private": true,
   "description": "GitHub action used to sign Android release packages",
-  "main": "lib/main.js",
+  "main": "dist/main.js",
+  "module": "dist/main.mjs",
+  "typings": "dist/main.d.ts",
+  "type": "module",
+  "files": [
+    "lib"
+  ],
   "scripts": {
+    "clean": "rm -fr lib",
     "build": "tsc",
     "test": "jest",
-    "deploy": "tsc && ./update_release.sh"
+    "deploy": "npm run build && ./update_release.sh"
   },
   "repository": {
     "type": "git",
@@ -26,11 +33,21 @@
     "@actions/io": "^1.1.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^23.0.5",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^10.0.1",
     "@types/jest": "^26.0.15",
     "@types/node": "^12.0.4",
+    "esbuild": "^0.16.7",
     "jest": "^26.6.3",
     "jest-circus": "^26.6.3",
+    "rollup": "^3.7.4",
+    "rollup-plugin-dts": "^5.0.0",
+    "rollup-plugin-esbuild": "^5.0.0",
+    "terser": "^5.16.1",
     "ts-jest": "^26.4.4",
-    "typescript": "^3.9.7"
+    "tsc": "^2.0.4",
+    "tslib": "^2.4.1",
+    "typescript": "^4.1.0"
   }
 }

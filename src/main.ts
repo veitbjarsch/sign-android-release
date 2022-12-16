@@ -1,21 +1,25 @@
-import * as core from '@actions/core';
+import { getInput, debug, error, setFailed, exportVariable, setOutput } from '@actions/core';
 import {signAabFile, signApkFile} from "./signing";
-import path from "path";
-import fs from "fs";
+import * as path from "path";
+import * as fs from "fs";
 import * as io from "./io-utils";
+
+
+
+
 
 async function run() {
   try {
     if (process.env.DEBUG_ACTION === 'true') {
-      core.debug("DEBUG FLAG DETECTED, SHORTCUTTING ACTION.")
+      debug("DEBUG FLAG DETECTED, SHORTCUTTING ACTION.")
       return;
     }
 
-    const releaseDir = core.getInput('releaseDirectory');
-    const signingKeyBase64 = core.getInput('signingKeyBase64');
-    const alias = core.getInput('alias');
-    const keyStorePassword = core.getInput('keyStorePassword');
-    const keyPassword = core.getInput('keyPassword');
+    const releaseDir = getInput('releaseDirectory');
+    const signingKeyBase64 = getInput('signingKeyBase64');
+    const alias = getInput('alias');
+    const keyStorePassword = getInput('keyStorePassword');
+    const keyPassword = getInput('keyPassword');
 
     console.log(`Preparing to sign key @ ${releaseDir} with signing key`);
 
@@ -30,7 +34,7 @@ async function run() {
       let signedReleaseFiles:string[] = [];
       let index = 0;
       for (let releaseFile of releaseFiles) {
-        core.debug(`Found release to sign: ${releaseFile.name}`);
+        debug(`Found release to sign: ${releaseFile.name}`);
         const releaseFilePath = path.join(releaseDir, releaseFile.name);
         let signedReleaseFile = '';
         if (releaseFile.name.endsWith('.apk')) {
@@ -38,35 +42,35 @@ async function run() {
         } else if (releaseFile.name.endsWith('.aab')) {
           signedReleaseFile = await signAabFile(releaseFilePath, signingKey, alias, keyStorePassword, keyPassword);
         } else {
-          core.error('No valid release file to sign, abort.');
-          core.setFailed('No valid release file to sign.');
+          error('No valid release file to sign, abort.');
+          setFailed('No valid release file to sign.');
         }
 
         // Each signed release file is stored in a separate variable + output.
-        core.exportVariable(`SIGNED_RELEASE_FILE_${index}`, signedReleaseFile);
-        core.setOutput(`signedReleaseFile${index}`, signedReleaseFile);
+        exportVariable(`SIGNED_RELEASE_FILE_${index}`, signedReleaseFile);
+        setOutput(`signedReleaseFile${index}`, signedReleaseFile);
         signedReleaseFiles.push(signedReleaseFile);
         ++index;
       }
 
       // All signed release files are stored in a merged variable + output.
-      core.exportVariable(`SIGNED_RELEASE_FILES`, signedReleaseFiles.join(":"));
-      core.setOutput('signedReleaseFiles', signedReleaseFiles.join(":"));
-      core.exportVariable(`NOF_SIGNED_RELEASE_FILES`, `${signedReleaseFiles.length}`);
-      core.setOutput(`nofSignedReleaseFiles`, `${signedReleaseFiles.length}`);
+      exportVariable(`SIGNED_RELEASE_FILES`, signedReleaseFiles.join(":"));
+      setOutput('signedReleaseFiles', signedReleaseFiles.join(":"));
+      exportVariable(`NOF_SIGNED_RELEASE_FILES`, `${signedReleaseFiles.length}`);
+      setOutput(`nofSignedReleaseFiles`, `${signedReleaseFiles.length}`);
 
       // When there is one and only one signed release file, stoire it in a specific variable + output.
       if (signedReleaseFiles.length == 1) {
-        core.exportVariable(`SIGNED_RELEASE_FILE`, signedReleaseFiles[0]);
-        core.setOutput('signedReleaseFile', signedReleaseFiles[0]);
+        exportVariable(`SIGNED_RELEASE_FILE`, signedReleaseFiles[0]);
+        setOutput('signedReleaseFile', signedReleaseFiles[0]);
       }
       console.log('Releases signed!');
     } else {
-      core.error("No release files (.apk or .aab) could be found. Abort.");
-      core.setFailed('No release files (.apk or .aab) could be found.');
+      error("No release files (.apk or .aab) could be found. Abort.");
+      setFailed('No release files (.apk or .aab) could be found.');
     }
-  } catch (error) {
-    core.setFailed(error.message);
+  } catch (error: any) {
+    setFailed(error.message);
   }
 }
 
